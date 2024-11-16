@@ -9,6 +9,21 @@ contract SlotTest is Test {
     uint32 public blobBaseFeeScalar;
     uint32 public baseFeeScalar;
 
+    struct SoulGasTokenStorage {
+        mapping(address => bool) _minters;
+        mapping(address => bool) _burners;
+        mapping(address => bool) _allowSgtValue;
+    }
+
+    bytes32 private constant _SOULGASTOKEN_STORAGE_LOCATION =
+        0x135c38e215d95c59dcdd8fe622dccc30d04cacb8c88c332e4e7441bac172dd00;
+
+    function _getSoulGasTokenStorage() private pure returns (SoulGasTokenStorage storage $) {
+        assembly {
+            $.slot := _SOULGASTOKEN_STORAGE_LOCATION
+        }
+    }
+
     function setUp() public {}
 
     function testSlot() public {
@@ -39,5 +54,18 @@ contract SlotTest is Test {
         uint256 value = 1e10;
         vm.store(address(erc20), slot, bytes32(value));
         assertEq(erc20.balanceOf(account), value);
+    }
+
+    function testAllowSgtValue() public {
+        SoulGasTokenStorage storage $ = _getSoulGasTokenStorage();
+        address account = address(1000);
+        $._allowSgtValue[account] = true;
+
+        bytes32 mapSlot = bytes32(uint256(_SOULGASTOKEN_STORAGE_LOCATION) + 2);
+        bytes32 slot = keccak256(abi.encode(account, mapSlot));
+        assertEq(vm.load(address(this), slot), bytes32(uint256(1)));
+
+        vm.store(address(this), slot, bytes32(uint256(0)));
+        assertEq($._allowSgtValue[account], false);
     }
 }
