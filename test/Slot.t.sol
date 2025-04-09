@@ -68,4 +68,8 @@ contract SlotTest is Test {
         vm.store(address(this), slot, bytes32(uint256(0)));
         assertEq($._allowSgtValue[account], false);
     }
+
+    function testPrintLog() view public {
+        console2.logBytes32(keccak256(abi.encode(uint256(keccak256("openzeppelin.storage.L1Block.HistoryHashesStorage")) - 1)) & ~bytes32(uint256(0xff)));
+    }
 }
